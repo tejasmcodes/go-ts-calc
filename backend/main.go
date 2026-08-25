@@ -49,15 +49,16 @@ func mathHandler(w http.ResponseWriter, r *http.Request) {
 		result = operations.Mul(numA, numB)
 
 	case "div":
-		if numB == 0.0 {
+		var err error
+		result, err = operations.Div(numA, numB)
+		if err != nil {
 			errorResponse := ErrorResponse{
-				Error: "Cannot divide the number by Zero",
+				Error: err.Error(),
 			}
 			writeJSON(w, http.StatusBadRequest, errorResponse)
 			return
 		}
 
-		result = operations.Div(numA, numB)
 
 	default:
 		errorResponse := ErrorResponse{
