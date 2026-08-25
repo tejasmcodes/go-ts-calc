@@ -1,11 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/tejasmcodes/go-ts-calc/backend/operations"
 )
 
 type MathResponse struct {
@@ -32,43 +33,38 @@ func mathHandler(w http.ResponseWriter, r *http.Request) {
 		errorResponse := ErrorResponse{
 			Error: "Please provide a valid number for a and b",
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(errorResponse)
+		writeJSON(w, http.StatusBadRequest, errorResponse)
 		return
 	}
 
 	result := 0.0
 	switch op {
 	case "add":
-		result = numA + numB
+		result = operations.Add(numA, numB)
 
 	case "sub":
-		result = numA - numB
+		result = operations.Sub(numA, numB)
 
 	case "mul":
-		result = numA * numB
+		result = operations.Mul(numA, numB)
 
 	case "div":
-		if numB == 0.0 {
+		var err error
+		result, err = operations.Div(numA, numB)
+		if err != nil {
 			errorResponse := ErrorResponse{
-				Error: "Cannot divide the number by Zero",
+				Error: err.Error(),
 			}
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(errorResponse)
+			writeJSON(w, http.StatusBadRequest, errorResponse)
 			return
 		}
 
-		result = numA / numB
 
 	default:
 		errorResponse := ErrorResponse{
 			Error: "Unknown operation. Use 'add', 'sub', 'mul', 'div'",
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(errorResponse)
+		writeJSON(w, http.StatusBadRequest, errorResponse)
 		return
 	}
 
@@ -79,8 +75,7 @@ func mathHandler(w http.ResponseWriter, r *http.Request) {
 		Result:    result,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	writeJSON(w, http.StatusOK, response)
 
 }
 
